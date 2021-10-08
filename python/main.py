@@ -13,7 +13,7 @@ def main(argv):
   elif int(mode) == 1 :
     j.convertVideotoJson(filename)
   else :
-    cam.convertKeypointsfromCam()
+    cam.convertKeypointsfromCam(filename)
   
 
 if __name__ == "__main__":

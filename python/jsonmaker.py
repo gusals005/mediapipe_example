@@ -4,7 +4,7 @@ import json
 from collections import OrderedDict
 import time
 from keypointinfo import POSELANDMARKS, TARGETLANDMARKS
-from camconverter import calculateAngle 
+from camconverter import calculateAngles, countWorkout, workoutSeleter
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
@@ -51,44 +51,14 @@ def convertVideotoJson(filename):
             if not results.pose_landmarks:
                 continue
             
-            shoulder1 = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].x,
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].y,
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].z]
-            elbow1 = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].x, 
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].y,
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].z]
-            wrist1 = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].x, 
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].y,
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].z]
+            angles = calculateAngles(results)
+            # angle3d = calculateAngle(shoulder1, elbow1, wrist1)
             
-            shoulder = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].x,
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].y]
-            elbow = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].x, 
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].y]
-            wrist = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].x, 
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].y]
+            angle, up, down, reset, count = workoutSeleter(angles, filename, up, down, reset, count )
 
-            
-            angle = calculateAngle(shoulder, elbow, wrist)
-            angle3d = calculateAngle(shoulder1, elbow1, wrist1)
-
-            if(angle > 130 and down == False):
-                down = True
-            elif(angle < 50 and up == False):
-                up = True
-            elif(angle > 130 and down == True and up == True):
-                count = count + 1
-                reset = True
-                up = False
-            elif(angle > 70 and angle < 100 and reset):
-                down = False
-                up = False
-                reset = False
-            
             cv2.putText(image, 'Angle2D : ' + str(angle), (10,50), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
-            cv2.putText(image, 'Angle3D : ' + str(180- angle3d), (10,100), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
             cv2.putText(image, 'Count : ' + str(count), (130,200), cv2.FONT_HERSHEY_SIMPLEX, 1 + 0.2*count, ( 0+10*count if 0+10*count<255 else 255,0,0), 2,cv2.LINE_AA)
-
+            # cv2.putText(image, 'Angle3D : ' + str(180- angle3d), (10,100), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
             if printCheck :
                 print(totalDict["workout"], image.shape)
                 printCheck = False

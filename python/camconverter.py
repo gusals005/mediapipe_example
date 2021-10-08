@@ -6,7 +6,115 @@ mp_drawing_styles = mp.solutions.drawing_styles
 mp_pose = mp.solutions.pose
 mp_holistic = mp.solutions.holistic
 
-def convertKeypointsfromCam():
+'''
+    argument : pose results.
+    nose : 0
+    left_eye : 2, right_eye : 5
+    left_ear: 7, right_ear : 8
+    left_shoulder : 11, right_shoulder: 12
+    left_elbow : 13, right_elbow:14
+    left_wrist: 15, right_wrist:16
+    left_hip : 23, right_hip: 24
+    left_knee : 25, right_knee: 26
+    left_ankle: 27, left_ankle: 28
+'''
+def getAngleThreePoint(results, poseIdx1, poseIdx2, poseIdx3):
+    keypoint1 = [results.pose_landmarks.landmark[poseIdx1].x,results.pose_landmarks.landmark[poseIdx1].y]
+    keypoint2 = [results.pose_landmarks.landmark[poseIdx2].x,results.pose_landmarks.landmark[poseIdx2].y]
+    keypoint3 = [results.pose_landmarks.landmark[poseIdx3].x,results.pose_landmarks.landmark[poseIdx3].y]
+    return calculateAngle(keypoint1,keypoint2,keypoint3)
+
+def getAngleThreePoint3D(results, poseIdx1, poseIdx2, poseIdx3):
+    keypoint1 = [results.pose_landmarks.landmark[poseIdx1].x,results.pose_landmarks.landmark[poseIdx1].y, results.pose_landmarks.landmark[poseIdx1].z]
+    keypoint2 = [results.pose_landmarks.landmark[poseIdx2].x,results.pose_landmarks.landmark[poseIdx2].y, results.pose_landmarks.landmark[poseIdx2].z]
+    keypoint3 = [results.pose_landmarks.landmark[poseIdx3].x,results.pose_landmarks.landmark[poseIdx3].y, results.pose_landmarks.landmark[poseIdx3].z]
+    return calculateAngle(keypoint1,keypoint2,keypoint3)
+
+def calculateAngles(results):
+    leftElbowAngle = getAngleThreePoint(results, 11,13,15)
+    rightElbowAngle = getAngleThreePoint(results, 12,14,16)
+    leftShoudlerAngle = getAngleThreePoint(results, 12,11,13)
+    rightShoudlerAngle = getAngleThreePoint(results, 11,12,14)
+    leftHip2ElbowAngle = getAngleThreePoint(results, 23,11,13)
+    rightHip2ElbowAngle = getAngleThreePoint(results, 24,12,14)
+    leftHipAngle = getAngleThreePoint(results, 11,23,25)
+    rightHipAngle = getAngleThreePoint(results, 12,24,26)
+    leftHip2KneeAngle = getAngleThreePoint(results, 24,23,25)
+    rightHip2KneeAngle = getAngleThreePoint(results, 23,24,26)
+    leftKneeAngle = getAngleThreePoint(results, 23,25,27)
+    rightKneeAngle = getAngleThreePoint(results, 24,26,28)
+
+    returnDict = {
+        'leftElbowAngle':leftElbowAngle,
+        'rightElbowAngle':rightElbowAngle,
+        'leftShoulderAngle':leftShoudlerAngle,
+        'rightShoulderAngle':rightShoudlerAngle,
+        'leftHip2ElbowAngle':leftHip2ElbowAngle,
+        'rightHip2ElbowAngle':rightHip2ElbowAngle,
+        'leftHipAngle':leftHipAngle,
+        'rightHipAngle':rightHipAngle,
+        'leftHip2KneeAngle':leftHip2KneeAngle, 
+        'rightHip2KneeAngle':rightHip2KneeAngle,
+        'leftKneeAngle':leftKneeAngle,
+        'rightKneeAngle':rightKneeAngle
+    }
+
+    return returnDict
+
+def workoutSeleter(angles, filename, up, down, reset, count):
+    if filename == 'W007': 
+        angle = angles['leftHipAngle']
+        up, down, reset, count = countWorkout(angle, 160,120, up,down,reset,count, 1)
+    elif filename == 'W008':
+        angle = angles['rightShoulderAngle']
+        up, down, reset, count = countWorkout(angle, 160,90, up,down,reset,count, 1)
+    elif filename == 'W009':
+        angle = angles['rightHip2ElbowAngle']
+        up, down, reset, count = countWorkout(angle, 160,40, up,down,reset,count, 1)
+    elif filename == 'W011':
+        angle = angles['leftHipAngle']
+        up, down, reset, count = countWorkout(angle, 110,95, up,down,reset,count, 0)
+    elif filename == 'W012':    
+        angle = angles['leftHipAngle']
+        up, down, reset, count = countWorkout(angle, 110,90, up,down,reset,count, 0)
+
+    return angle, up, down, reset, count
+                
+
+def countWorkout(angle, upper, lower, up,down,reset,count, mode):
+    if mode == 0:
+        if(angle > upper and up == False):
+            up = True
+        elif(angle < lower and down == False):
+            down = True
+        elif(angle > upper and up == True and down == True):
+            count = count + 1
+            reset = True
+            down = False
+        elif(angle > lower+5 and angle < upper-5 and reset):
+            down = False
+            up = False
+            reset = False
+    else:
+        if(angle < lower and down == False):
+            down = True
+        elif(angle > upper and up == False):
+            up = True
+        elif(angle < lower and down == True and up == True):
+            count = count +1
+            reset = True
+            up = False
+        elif(angle > lower+20 and angle < upper-20 and reset):
+            down = False
+            up = False
+            reset = False
+
+    return up, down, reset, count
+
+
+
+
+def convertKeypointsfromCam(filename):
     # For webcam input:
     cap = cv2.VideoCapture(0)
     pose = mp_pose.Pose(
@@ -37,41 +145,15 @@ def convertKeypointsfromCam():
         if not results.pose_landmarks:
             continue
 
-        shoulder = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].x,
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].y,
-                    results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].z]
-        elbow = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].x, 
-                 results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].y,
-                 results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_ELBOW].z]
-        wrist = [results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].x, 
-                 results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].y,
-                 results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_WRIST].z]
-
-        print(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_SHOULDER].z)
-        print()         
-
-        angle = calculateAngle(shoulder, elbow, wrist)
-
-        if(angle > 130 and down == False):
-            down = True
-        elif(angle < 50 and up == False):
-            up = True
-        elif(angle > 130 and down == True and up == True):
-            count = count + 1
-            reset = True
-            up = False
-        elif(angle > 70 and angle < 100 and reset):
-            down = False
-            up = False
-            reset = False
+        # angle3d = getAngleThreePoint3D(results, 11,13,15)
+        angles = calculateAngles(results)
         
-        cv2.putText(image, 'Angle : ' + str(angle), (10,50), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 0+10*count if 0+10*count<255 else 255,0,0), 2,cv2.LINE_AA)
+        angle, up, down, reset, count = workoutSeleter(angles, filename, up,down,reset,count)     
+
+        cv2.putText(image, 'Angle2D : ' + str(angle), (10,50), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
+        # cv2.putText(image, 'Angle3D : ' + str(angle3d), (10,100), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
         cv2.putText(image, 'Count : ' + str(count), (130,200), cv2.FONT_HERSHEY_SIMPLEX, 1 + 0.2*count, ( 0+10*count if 0+10*count<255 else 255,0,0), 2,cv2.LINE_AA)
-        # print('--------')
-        # print(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_SHOULDER])
-        # print(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_ELBOW])
-        # print(results.pose_landmarks.landmark[mp_holistic.PoseLandmark.RIGHT_WRIST])
-        # print('--------')
+
         # Draw the pose annotation on the image.
         image.flags.writeable = True
         image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
