@@ -17,6 +17,7 @@ mp_holistic = mp.solutions.holistic
     left_hip : 23, right_hip: 24
     left_knee : 25, right_knee: 26
     left_ankle: 27, left_ankle: 28
+    left_foot_index: 31, right_foot_index: 32
 '''
 def getAngleThreePoint(results, poseIdx1, poseIdx2, poseIdx3):
     keypoint1 = [results.pose_landmarks.landmark[poseIdx1].x,results.pose_landmarks.landmark[poseIdx1].y]
@@ -43,6 +44,8 @@ def calculateAngles(results):
     rightHip2KneeAngle = getAngleThreePoint(results, 23,24,26)
     leftKneeAngle = getAngleThreePoint(results, 23,25,27)
     rightKneeAngle = getAngleThreePoint(results, 24,26,28)
+    leftAnkleAngle = getAngleThreePoint(results, 25,27,31)
+    rightAnkleAngle = getAngleThreePoint(results, 26,28,32)
 
     returnDict = {
         'leftElbowAngle':leftElbowAngle,
@@ -56,13 +59,18 @@ def calculateAngles(results):
         'leftHip2KneeAngle':leftHip2KneeAngle, 
         'rightHip2KneeAngle':rightHip2KneeAngle,
         'leftKneeAngle':leftKneeAngle,
-        'rightKneeAngle':rightKneeAngle
+        'rightKneeAngle':rightKneeAngle,
+        'leftAnkleAngle':leftAnkleAngle,
+        'rightAnkleAngle':rightAnkleAngle
     }
 
     return returnDict
 
 def workoutSeleter(angles, filename, up, down, reset, count):
-    if filename == 'W007': 
+    if filename == 'W006':
+        angle = angles['leftAnkleAngle']
+        up, down, reset, count = countWorkout(angle, 150,110, up,down,reset,count, 1)
+    elif filename == 'W007': 
         angle = angles['leftHipAngle']
         up, down, reset, count = countWorkout(angle, 160,120, up,down,reset,count, 1)
     elif filename == 'W008':
@@ -77,6 +85,22 @@ def workoutSeleter(angles, filename, up, down, reset, count):
     elif filename == 'W012':    
         angle = angles['leftHipAngle']
         up, down, reset, count = countWorkout(angle, 110,90, up,down,reset,count, 0)
+    elif filename == 'W015':
+        angle = angles['leftHipAngle']
+        up, down, reset, count = countWorkout(angle, 150,120, up,down,reset,count, 0)
+    elif filename == 'W020':
+        angle = angles['rightHipAngle']
+        up, down, reset, count = countWorkout(angle, 170,120, up,down,reset,count, 0)
+    elif filename == 'W022':
+        angle = angles['leftHipAngle']
+        up, down, reset, count = countWorkout(angle, 160,110, up,down,reset,count, 0)
+    elif filename == 'W023':
+        angle = angles['leftKneeAngle']
+        up, down, reset, count = countWorkout(angle, 170,130, up,down,reset,count, 0)
+    elif filename == 'W024':
+        angle = angles['leftKneeAngle']
+        up, down, reset, count = countWorkout(angle, 170,150, up,down,reset,count, 0)
+    
 
     return angle, up, down, reset, count
                 
