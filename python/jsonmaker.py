@@ -51,13 +51,13 @@ def convertVideotoJson(filename):
             if not results.pose_landmarks:
                 continue
             
-            angles = calculateAngles(results)
-            # angle3d = calculateAngle(shoulder1, elbow1, wrist1)
+            # angles = calculateAngles(results)
+            # # angle3d = calculateAngle(shoulder1, elbow1, wrist1)
             
-            angle, up, down, reset, count = workoutSeleter(angles, filename, up, down, reset, count )
+            # angle, up, down, reset, count = workoutSeleter(angles, filename, up, down, reset, count )
 
-            cv2.putText(image, 'Angle2D : ' + str(angle), (10,50), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
-            cv2.putText(image, 'Count : ' + str(count), (130,200), cv2.FONT_HERSHEY_SIMPLEX, 1 + 0.2*count, ( 0+10*count if 0+10*count<255 else 255,0,0), 2,cv2.LINE_AA)
+            # cv2.putText(image, 'Angle2D : ' + str(angle), (10,50), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
+            # cv2.putText(image, 'Count : ' + str(count), (130,200), cv2.FONT_HERSHEY_SIMPLEX, 1 + 0.2*count, ( 0+10*count if 0+10*count<255 else 255,0,0), 2,cv2.LINE_AA)
             # cv2.putText(image, 'Angle3D : ' + str(180- angle3d), (10,100), cv2.FONT_HERSHEY_SIMPLEX, 2, ( 255,0,0), 2,cv2.LINE_AA)
             if printCheck :
                 print(totalDict["workout"], image.shape)
@@ -82,13 +82,13 @@ def convertVideotoJson(filename):
             totalDict["posedata"].append(frame)
             #print(frame)
             # Draw the pose annotation on the image.
-            image.flags.writeable = True
-            image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+            # image.flags.writeable = True
+            # image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             #print(results.pose_landmarks.landmark)
             idx = idx+1
-            mp_drawing.draw_landmarks(
-                image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
-            cv2.imshow('MediaPipe Pose', image)
+            # mp_drawing.draw_landmarks(
+            #     image, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+            # cv2.imshow('MediaPipe Pose', image)
             if cv2.waitKey(5) & 0xFF == 27:
                 break
     vidcap.release()
